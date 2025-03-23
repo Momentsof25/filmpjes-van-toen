@@ -1,50 +1,42 @@
-import os
 from flask import Flask, render_template, request, send_file
-from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
-from werkzeug.utils import secure_filename
+from moviepy.editor import ImageSequenceClip, AudioFileClip
+import os
+import tempfile
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'videos'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = tempfile.mkdtemp()
 
-@app.route('/')
+@app.route("/", methods=["GET"])
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    audio = request.files.get('audio')
-    images = request.files.getlist('images')
+@app.route("/generate", methods=["POST"])
+def generate():
+    images = request.files.getlist("images")
+    audio = request.files.get("audio")
 
-    if not audio or not images:
-        return 'Audio en afbeeldingen zijn verplicht!', 400
+    if not images or not audio:
+        return "Geen foto's of audio geüpload", 400
 
-    audio_path = os.path.join(UPLOAD_FOLDER, secure_filename(audio.filename))
-    audio.save(audio_path)
-
+    # Opslaan van bestanden
     image_paths = []
     for image in images:
-        image_path = os.path.join(UPLOAD_FOLDER, secure_filename(image.filename))
-        image.save(image_path)
-        image_paths.append(image_path)
+        img_path = os.path.join(UPLOAD_FOLDER, image.filename)
+        image.save(img_path)
+        image_paths.append(img_path)
 
+    audio_path = os.path.join(UPLOAD_FOLDER, audio.filename)
+    audio.save(audio_path)
+
+    # Maak video met MoviePy
     audio_clip = AudioFileClip(audio_path)
-    duration_per_image = audio_clip.duration / len(image_paths)
+    clip = ImageSequenceClip(image_paths, durations=[1]*len(image_paths))  # 1 sec per foto
+    clip = clip.set_audio(audio_clip.set_duration(clip.duration))
 
-    clips = []
-    for path in image_paths:
-        clip = ImageClip(path).set_duration(duration_per_image).fadein(0.5).fadeout(0.5).resize(height=720)
-        clips.append(clip)
+    video_path = os.path.join(UPLOAD_FOLDER, "result.mp4")
+    clip.write_videofile(video_path, fps=24)
 
-    final_video = concatenate_videoclips(clips, method="compose")
-    final_video = final_video.set_audio(audio_clip)
+    return send_file(video_path, as_attachment=True)
 
-    output_path = os.path.join(OUTPUT_FOLDER, 'herinnering.mp4')
-    final_video.write_videofile(output_path, fps=24)
-
-    return send_file(output_path, as_attachment=True)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
