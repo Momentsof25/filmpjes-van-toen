@@ -1,5 +1,1 @@
-streamlit
-moviepy
-imageio
-imageio-ffmpeg
-numpy
+fix: gebruik moviepy[all]
