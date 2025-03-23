@@ -1,7 +1,5 @@
 flask
-moviepy[all]==2.1.2
+moviepy
 imageio
 imageio-ffmpeg
 gunicorn
-
-fix: correcte requirements.txt zonder foutregel
