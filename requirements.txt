@@ -1,4 +1,4 @@
 streamlit
-moviepy
+moviepy[all]
 imageio
 imageio-ffmpeg
