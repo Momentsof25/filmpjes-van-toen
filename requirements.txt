@@ -1,6 +1,2 @@
-flask
-moviepy
-imageio
-imageio-ffmpeg
-gunicorn
 streamlit
+moviepy[all]
