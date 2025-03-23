@@ -1,40 +1,32 @@
-from flask import Flask, render_template, request, send_file
+import streamlit as st
 from moviepy.editor import ImageSequenceClip, AudioFileClip
 import os
 import tempfile
 
-app = Flask(__name__)
-UPLOAD_FOLDER = tempfile.mkdtemp()
+st.title("Filmpjes van Toen 🎬")
 
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html")
+uploaded_images = st.file_uploader("Upload foto's", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+uploaded_audio = st.file_uploader("Upload muziek (MP3)", type=["mp3"])
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    images = request.files.getlist("images")
-    audio = request.files.get("audio")
+if st.button("Maak video") and uploaded_images and uploaded_audio:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        image_paths = []
+        for image in uploaded_images:
+            path = os.path.join(tmpdir, image.name)
+            with open(path, "wb") as f:
+                f.write(image.read())
+            image_paths.append(path)
 
-    if not images or not audio:
-        return "Geen foto's of audio geüpload", 400
+        audio_path = os.path.join(tmpdir, uploaded_audio.name)
+        with open(audio_path, "wb") as f:
+            f.write(uploaded_audio.read())
 
-    image_paths = []
-    for image in images:
-        img_path = os.path.join(UPLOAD_FOLDER, image.filename)
-        image.save(img_path)
-        image_paths.append(img_path)
+        audio_clip = AudioFileClip(audio_path)
+        clip = ImageSequenceClip(image_paths, durations=[1]*len(image_paths))
+        clip = clip.set_audio(audio_clip.set_duration(clip.duration))
 
-    audio_path = os.path.join(UPLOAD_FOLDER, audio.filename)
-    audio.save(audio_path)
+        video_path = os.path.join(tmpdir, "video.mp4")
+        clip.write_videofile(video_path, fps=24)
 
-    audio_clip = AudioFileClip(audio_path)
-    clip = ImageSequenceClip(image_paths, durations=[1]*len(image_paths))
-    clip = clip.set_audio(audio_clip.set_duration(clip.duration))
-
-    video_path = os.path.join(UPLOAD_FOLDER, "result.mp4")
-    clip.write_videofile(video_path, fps=24)
-
-    return send_file(video_path, as_attachment=True)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        with open(video_path, "rb") as f:
+            st.download_button("Download video", f, file_name="filmpje.mp4")
