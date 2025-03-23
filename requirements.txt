@@ -1,1 +1,5 @@
-fix: gebruik moviepy[all]
+flask
+moviepy
+imageio
+imageio-ffmpeg
+gunicorn
