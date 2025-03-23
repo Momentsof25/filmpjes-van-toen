@@ -18,7 +18,6 @@ def generate():
     if not images or not audio:
         return "Geen foto's of audio geüpload", 400
 
-    # Opslaan van bestanden
     image_paths = []
     for image in images:
         img_path = os.path.join(UPLOAD_FOLDER, image.filename)
@@ -28,9 +27,8 @@ def generate():
     audio_path = os.path.join(UPLOAD_FOLDER, audio.filename)
     audio.save(audio_path)
 
-    # Maak video met MoviePy
     audio_clip = AudioFileClip(audio_path)
-    clip = ImageSequenceClip(image_paths, durations=[1]*len(image_paths))  # 1 sec per foto
+    clip = ImageSequenceClip(image_paths, durations=[1]*len(image_paths))
     clip = clip.set_audio(audio_clip.set_duration(clip.duration))
 
     video_path = os.path.join(UPLOAD_FOLDER, "result.mp4")
