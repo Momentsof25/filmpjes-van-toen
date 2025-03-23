@@ -1,3 +1,5 @@
 flask
 moviepy[all]==2.1.2
+imageio
+imageio-ffmpeg
 gunicorn
