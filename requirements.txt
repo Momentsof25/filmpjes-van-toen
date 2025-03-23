@@ -1,2 +1,5 @@
 streamlit
-moviepy[all]
+moviepy
+imageio
+imageio-ffmpeg
+numpy
