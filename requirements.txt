@@ -1,5 +1,5 @@
 flask
-moviepy
+moviepy[all]
 imageio
 imageio-ffmpeg
 gunicorn
