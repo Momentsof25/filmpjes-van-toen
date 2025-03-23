@@ -3,3 +3,4 @@ moviepy[all]
 imageio
 imageio-ffmpeg
 gunicorn
+Fix moviepy import
